@@ -1,0 +1,52 @@
+{
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "A vibrant assortment of artisanal gummy bears in various fruit flavors.",
+      "imageUrl": "https://images.unsplash.com/photo-1675437434916-fd6d0b03749d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxndW1teSUyMGJlYXJzfGVufDB8fHx8MTc2NTYzNjc1NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gummy bears"
+    },
+    {
+      "id": "2",
+      "description": "Hand-crafted gourmet chocolate truffles with a dusting of cocoa powder.",
+      "imageUrl": "https://images.unsplash.com/photo-1687352520025-1960aca64ffd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjaG9jb2xhdGUlMjB0cnVmZmxlc3xlbnwwfHx8fDE3NjU2Nzc1NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chocolate truffles"
+    },
+    {
+      "id": "3",
+      "description": "Classic rainbow-swirled lollipops, a nostalgic and colorful treat.",
+      "imageUrl": "https://images.unsplash.com/photo-1692854913323-d648bb3662a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzd2lybCUyMGxvbGxpcG9wc3xlbnwwfHx8fDE3NjU3MDc5MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "swirl lollipops"
+    },
+    {
+      "id": "4",
+      "description": "Rich and creamy caramel squares, individually wrapped for freshness.",
+      "imageUrl": "https://images.unsplash.com/photo-1676030788335-81edebb883b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2FyYW1lbCUyMHNxdWFyZXN8ZW58MHx8fHwxNzY1NzA3OTAyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "caramel squares"
+    },
+    {
+      "id": "5",
+      "description": "A selection of sour patch candies, coated in tangy sugar crystals.",
+      "imageUrl": "https://images.unsplash.com/photo-1697341426564-1c2ba63c87cc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzb3VyJTIwY2FuZGllc3xlbnwwfHx8fDE3NjU3MDc5MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sour candies"
+    },
+    {
+      "id": "6",
+      "description": "Decadent dark chocolate bar with almonds and sea salt.",
+      "imageUrl": "https://images.unsplash.com/photo-1575377427642-087cf684f29d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaG9jb2xhdGUlMjBiYXJ8ZW58MHx8fHwxNzY1NjQxNjE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chocolate bar"
+    },
+    {
+      "id": "7",
+      "description": "Colorful jelly beans in a mix of classic and exotic flavors.",
+      "imageUrl": "https://images.unsplash.com/photo-1501755792080-cd51e405462c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxqZWxseSUyMGJlYW5zfGVufDB8fHx8MTc2NTcwNzkwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jelly beans"
+    },
+    {
+      "id": "8",
+      "description": "Soft and chewy saltwater taffy in a variety of pastel colors.",
+      "imageUrl": "https://images.unsplash.com/photo-1650747835887-3abb06160fa7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzYWx0d2F0ZXIlMjB0YWZmeXxlbnwwfHx8fDE3NjU3MDc5MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "saltwater taffy"
+    }
+  ]
+}
