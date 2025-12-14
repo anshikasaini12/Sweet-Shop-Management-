@@ -1,0 +1,164 @@
+/**
+ * Core Philosophy: This ruleset enforces a mixed-access security model tailored for a Sweet Shop Management System.
+ * It combines user-ownership for personal data, role-based access control for administrative tasks, and public read access for the product catalog.
+ * The primary goal is strong authorization while maintaining flexibility for application development.
+ *
+ * Data Structure:
+ * - /users/{userId}: Private user profile data, accessible only by the owning user.
+ * - /sweets/{sweetId}: A public catalog of sweets. Anyone can read, but only admins can manage (create, update, delete).
+ * - /orders/{orderId}: Customer orders. Owned by the user who created them, but also accessible to admins for fulfillment.
+ * - /orders/{orderId}/order_items/{orderItemId}: Line items for an order, inheriting access from the parent order.
+ * - /trend_predictions/{trendPredictionId}: AI-generated business intelligence, readable only by admins.
+ * - /roles_admin/{userId}: A lookup collection to grant admin privileges. The existence of a document here signifies an admin user.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users can only access their own data within the `/users` and `/orders` collections. Listing all users or all orders is prohibited for non-admins.
+ * - Admin Roles: A user is considered an admin if a document with their UID exists in the `/roles_admin` collection. This provides a clear and secure way to manage elevated privileges.
+ * - Public Catalog: The `/sweets` collection is publicly readable to allow anonymous browsing of products, but all write operations are strictly limited to admins.
+ * - Backend-Managed Data: The `/trend_predictions` collection is considered read-only from a user perspective, assuming it is populated by a trusted backend or AI service.
+ *
+ * Denormalization for Authorization:
+ * - The `Order` document contains a `customerId` field. This is critical for authorization, allowing rules to directly check for ownership without performing extra lookups or joins.
+ * - Admin status is determined by the existence of a document in `/roles_admin/{userId}`. This is a highly performant pattern that avoids placing a mutable `role` field on a user's own profile.
+ *
+ * Structural Segregation:
+ * - Admin roles (`/roles_admin`) are stored in a separate collection from user profiles (`/users`). This prevents a user from modifying their own roles.
+ * - Public product data (`/sweets`) is in a top-level collection, separate from private user data, which simplifies security for public list operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for reusable logic
+    
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId,
+     * establishing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the user is an administrator.
+     * Admin status is granted if a document with the user's UID exists in the roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * Validates that a user owns a document that already exists.
+     * Essential for safe update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Checks if the current user is the owner of a specific order by reading the
+     * customerId field on the order document.
+     */
+    function isOrderOwner(orderId) {
+      let order = get(/databases/$(database)/documents/orders/$(orderId));
+      return isSignedIn() && order.data.customerId == request.auth.uid;
+    }
+    
+    /**
+     * @description Rules for a user's own profile document.
+     * @path /users/{userId}
+     * @allow A logged-in user (auth.uid='user123') can create their own profile at `/users/user123`. (create)
+     * @deny A logged-in user (auth.uid='user123') trying to read another user's profile at `/users/user456`. (get)
+     * @principle Restricts access to a user's own data tree. Enforces self-creation and ownership.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the public sweet catalog. Anyone can view, only admins can manage.
+     * @path /sweets/{sweetId}
+     * @allow Any user, signed-in or not, can read the list of sweets. (list)
+     * @deny A non-admin user trying to add a new sweet to the catalog. (create)
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for a product catalog.
+     */
+    match /sweets/{sweetId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Rules for customer orders. Users can manage their own orders; admins have full access.
+     * @path /orders/{orderId}
+     * @allow A user (auth.uid='user123') creating an order where the order data includes `customerId: 'user123'`. (create)
+     * @deny A user (auth.uid='user123') trying to read an order belonging to another user. (get)
+     * @principle Enforces document ownership via a `customerId` field, with admin override access.
+     */
+    match /orders/{orderId} {
+      allow get: if (resource != null && isOwner(resource.data.customerId)) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
+      allow update: if (resource != null && isOwner(resource.data.customerId) && request.resource.data.customerId == resource.data.customerId) || isAdmin();
+      allow delete: if (resource != null && isOwner(resource.data.customerId)) || isAdmin();
+
+      /**
+       * @description Rules for items within an order. Access is inherited from the parent order.
+       * @path /orders/{orderId}/order_items/{orderItemId}
+       * @allow The owner of the parent order `/orders/order123` can list its items. (list)
+       * @deny A user who does not own `/orders/order123` trying to read an item within it. (get)
+       * @principle Secures a subcollection by checking ownership of the parent document.
+       */
+      match /order_items/{orderItemId} {
+        allow get: if isOrderOwner(orderId) || isAdmin();
+        allow list: if isOrderOwner(orderId) || isAdmin();
+        allow create: if isOrderOwner(orderId) || isAdmin();
+        allow update: if (resource != null && (isOrderOwner(orderId) || isAdmin()));
+        allow delete: if (resource != null && (isOrderOwner(orderId) || isAdmin()));
+      }
+    }
+
+    /**
+     * @description Rules for AI-generated trend predictions. Read-only for admins.
+     * @path /trend_predictions/{trendPredictionId}
+     * @allow An admin user can read a specific trend prediction document. (get)
+     * @deny A regular user attempting to read any trend prediction. (get, list)
+     * @principle Protects sensitive business intelligence data by restricting access to admin roles. Assumes writes are handled by a trusted backend service.
+     */
+    match /trend_predictions/{trendPredictionId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Rules for the admin role management collection. Only admins can manage other admins.
+     * @path /roles_admin/{userId}
+     * @allow An admin user can create a new document in this collection to grant another user admin rights. (create)
+     * @deny A non-admin user trying to read the list of admins. (list)
+     * @principle Secures the role-granting mechanism itself, preventing unauthorized privilege escalation.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
